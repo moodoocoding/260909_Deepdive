@@ -7,6 +7,7 @@ import {
   AirVent,
   Blender,
   Bot,
+  BrainCircuit,
   Check,
   CheckCircle2,
   ChevronRight,
@@ -23,7 +24,6 @@ import {
   LampDesk,
   Lightbulb,
   ListChecks,
-  LockKeyhole,
   Menu,
   MousePointer2,
   Navigation,
@@ -43,6 +43,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { MissionTwo } from "./mission-two";
 
 type Category = "computer" | "not-computer";
 
@@ -119,7 +120,19 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-function Dashboard({ onStart, completed }: { onStart: () => void; completed: boolean }) {
+function Dashboard({
+  onStartMission1,
+  onStartMission2,
+  completedMissions,
+}: {
+  onStartMission1: () => void;
+  onStartMission2: () => void;
+  completedMissions: Set<number>;
+}) {
+  const completedCount = completedMissions.size;
+  const mission1Completed = completedMissions.has(1);
+  const mission2Completed = completedMissions.has(2);
+  const overallProgress = (completedCount / 2) * 100;
   return (
     <div className="mx-auto w-full max-w-[1180px] px-5 pb-12 pt-8 sm:px-8 lg:px-10 lg:pt-12">
       <section className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -143,7 +156,7 @@ function Dashboard({ onStart, completed }: { onStart: () => void; completed: boo
             <h2 className="font-display mt-5 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">컴퓨터를 찾아라!</h2>
             <p className="mt-3 max-w-md text-[0.98rem] leading-relaxed text-slate-200">여러 사물을 살펴보고 ‘컴퓨터’와 ‘컴퓨터가 아닌 것’으로 분류해 보세요.</p>
             <div className="mt-7 flex flex-wrap items-center gap-4">
-              <Button size="lg" className="h-12 rounded-xl bg-[#f5c85d] px-5 font-bold text-[#183c42] shadow-lg shadow-slate-950/20 hover:bg-[#ffda78]" onClick={onStart}>{completed ? "다시 도전하기" : "미션 시작하기"} <ArrowRight className="size-4" /></Button>
+              <Button size="lg" className="h-12 rounded-xl bg-[#f5c85d] px-5 font-bold text-[#183c42] shadow-lg shadow-slate-950/20 hover:bg-[#ffda78]" onClick={onStartMission1}>{mission1Completed ? "다시 도전하기" : "미션 시작하기"} <ArrowRight className="size-4" /></Button>
               <span className="flex items-center gap-2 text-sm font-medium text-slate-300"><Clock3 className="size-4" aria-hidden="true" /> 약 8분</span>
             </div>
           </div>
@@ -151,13 +164,13 @@ function Dashboard({ onStart, completed }: { onStart: () => void; completed: boo
 
         <article className="flex flex-col rounded-[28px] border border-slate-200 bg-white p-7 shadow-sm">
           <div className="flex items-start justify-between">
-            <div><p className="text-sm font-bold text-slate-500">나의 연수 진행률</p><p className="font-display mt-2 text-4xl font-bold tracking-tight text-slate-950">{completed ? 100 : 0}%</p></div>
+            <div><p className="text-sm font-bold text-slate-500">나의 연수 진행률</p><p className="font-display mt-2 text-4xl font-bold tracking-tight text-slate-950">{overallProgress}%</p></div>
             <div className="grid size-11 place-items-center rounded-2xl bg-[#e9f5f3] text-[#0d7771]"><Gauge className="size-5" aria-hidden="true" /></div>
           </div>
-          <Progress value={completed ? 100 : 0} className="mt-7 h-2.5 bg-slate-100 [&_[data-slot=progress-indicator]]:bg-[#27a69c]" />
+          <Progress value={overallProgress} className="mt-7 h-2.5 bg-slate-100 [&_[data-slot=progress-indicator]]:bg-[#27a69c]" />
           <div className="mt-auto grid grid-cols-2 gap-3 pt-7">
-            <div className="rounded-2xl bg-slate-50 p-4"><p className="text-2xl font-bold text-slate-900">{completed ? 1 : 0}</p><p className="mt-1 text-xs font-semibold text-slate-500">완료한 미션</p></div>
-            <div className="rounded-2xl bg-slate-50 p-4"><p className="text-2xl font-bold text-slate-900">1</p><p className="mt-1 text-xs font-semibold text-slate-500">진행 가능</p></div>
+            <div className="rounded-2xl bg-slate-50 p-4"><p className="text-2xl font-bold text-slate-900">{completedCount}</p><p className="mt-1 text-xs font-semibold text-slate-500">완료한 미션</p></div>
+            <div className="rounded-2xl bg-slate-50 p-4"><p className="text-2xl font-bold text-slate-900">2</p><p className="mt-1 text-xs font-semibold text-slate-500">진행 가능</p></div>
           </div>
         </article>
       </section>
@@ -165,25 +178,35 @@ function Dashboard({ onStart, completed }: { onStart: () => void; completed: boo
       <section className="mt-11">
         <div className="mb-5 flex items-end justify-between">
           <div><h2 className="font-display text-2xl font-bold tracking-tight text-slate-950">미션 목록</h2><p className="mt-1 text-sm text-slate-500">하나씩 경험하며 수업 아이디어를 모아 보세요.</p></div>
-          <span className="hidden text-sm font-semibold text-slate-400 sm:block">1개의 미션</span>
+          <span className="hidden text-sm font-semibold text-slate-400 sm:block">2개의 미션</span>
         </div>
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          <button onClick={onStart} className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-[#70c8c0] hover:shadow-xl hover:shadow-slate-200/60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-600/20">
+          <button onClick={onStartMission1} className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-[#70c8c0] hover:shadow-xl hover:shadow-slate-200/60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-600/20">
             <div className="flex items-start justify-between">
               <div className="grid size-12 place-items-center rounded-2xl bg-[#e9f5f3] text-[#0d7771]"><Cpu className="size-6" aria-hidden="true" /></div>
-              <span className={cn("rounded-full px-3 py-1.5 text-xs font-bold", completed ? "bg-emerald-50 text-emerald-700" : "bg-[#eaf8f5] text-[#0d7771]")}>{completed ? "완료" : "진행 가능"}</span>
+              <span className={cn("rounded-full px-3 py-1.5 text-xs font-bold", mission1Completed ? "bg-emerald-50 text-emerald-700" : "bg-[#eaf8f5] text-[#0d7771]")}>{mission1Completed ? "완료" : "진행 가능"}</span>
             </div>
             <p className="mt-6 text-xs font-bold tracking-wider text-slate-400">MISSION 01</p>
             <h3 className="font-display mt-1 text-xl font-bold text-slate-950">컴퓨터를 찾아라!</h3>
             <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5 text-sm">
               <span className="flex items-center gap-2 font-medium text-slate-500"><Clock3 className="size-4" /> 8분</span>
-              <span className="flex items-center gap-1 font-bold text-[#0d7771]">{completed ? "다시 하기" : "시작하기"} <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
+              <span className="flex items-center gap-1 font-bold text-[#0d7771]">{mission1Completed ? "다시 하기" : "시작하기"} <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
             </div>
           </button>
 
-          <div className="flex min-h-[278px] items-center justify-center rounded-[24px] border border-dashed border-slate-300 bg-white/50 p-7 text-center">
-            <div><div className="mx-auto grid size-11 place-items-center rounded-2xl bg-slate-100 text-slate-400"><LockKeyhole className="size-5" /></div><p className="mt-4 text-sm font-bold text-slate-600">다음 미션을 준비하고 있어요</p><p className="mt-1 text-xs leading-relaxed text-slate-400">새로운 활동이 이곳에 차례로 추가됩니다.</p></div>
-          </div>
+          <button onClick={onStartMission2} className="group rounded-[24px] border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-[#70c8c0] hover:shadow-xl hover:shadow-slate-200/60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-600/20">
+            <div className="flex items-start justify-between">
+              <div className="grid size-12 place-items-center rounded-2xl bg-violet-50 text-violet-700"><BrainCircuit className="size-6" aria-hidden="true" /></div>
+              <span className={cn("rounded-full px-3 py-1.5 text-xs font-bold", mission2Completed ? "bg-emerald-50 text-emerald-700" : "bg-violet-50 text-violet-700")}>{mission2Completed ? "완료" : "진행 가능"}</span>
+            </div>
+            <p className="mt-6 text-xs font-bold tracking-wider text-slate-400">MISSION 02</p>
+            <h3 className="font-display mt-1 text-xl font-bold text-slate-950">컴퓨터 안의 인공지능</h3>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">15개의 질문으로 AI·모델·서비스의 관계를 점검합니다.</p>
+            <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5 text-sm">
+              <span className="flex items-center gap-2 font-medium text-slate-500"><Clock3 className="size-4" /> 10분</span>
+              <span className="flex items-center gap-1 font-bold text-[#0d7771]">{mission2Completed ? "다시 하기" : "시작하기"} <ChevronRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
+            </div>
+          </button>
         </div>
       </section>
     </div>
@@ -421,9 +444,17 @@ function Mission({ onBack, onComplete }: { onBack: () => void; onComplete: () =>
 
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [screen, setScreen] = useState<"dashboard" | "mission">("dashboard");
-  const [completed, setCompleted] = useState(false);
-  const startMission = () => { setScreen("mission"); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const [screen, setScreen] = useState<"dashboard" | "mission1" | "mission2">("dashboard");
+  const [completedMissions, setCompletedMissions] = useState<Set<number>>(() => new Set());
+  const startMission = (mission: 1 | 2) => {
+    setScreen(mission === 1 ? "mission1" : "mission2");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const completeMission = (mission: 1 | 2) => {
+    setCompletedMissions((current) => new Set(current).add(mission));
+    setScreen("dashboard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <main className="min-h-screen bg-[#f6f8f9] text-slate-900">
@@ -431,10 +462,15 @@ export default function HomePage() {
       <div className="min-h-screen lg:pl-[268px]">
         <header className="sticky top-0 z-30 flex h-[73px] items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur-md sm:px-8 lg:px-10">
           <div className="flex items-center gap-3 lg:hidden"><Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} aria-label="메뉴 열기"><Menu /></Button><Brand /></div>
-          <div className="hidden items-center gap-2 text-sm font-semibold text-slate-400 lg:flex"><Home className="size-4" /> 대시보드{screen === "mission" && <><ChevronRight className="size-4" /><span className="text-slate-700">컴퓨터를 찾아라!</span></>}</div>
-          <div className="ml-auto flex items-center gap-3">{completed && <span className="hidden items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 sm:flex"><CheckCircle2 className="size-3.5" /> 미션 1 완료</span>}<div className="grid size-9 place-items-center rounded-full bg-[#e9f5f3] text-sm font-bold text-[#0d615e]">김</div></div>
+          <div className="hidden items-center gap-2 text-sm font-semibold text-slate-400 lg:flex">
+            <Home className="size-4" /> 대시보드
+            {screen !== "dashboard" && <><ChevronRight className="size-4" /><span className="text-slate-700">{screen === "mission1" ? "컴퓨터를 찾아라!" : "컴퓨터 안의 인공지능"}</span></>}
+          </div>
+          <div className="ml-auto flex items-center gap-3">{completedMissions.size > 0 && <span className="hidden items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 sm:flex"><CheckCircle2 className="size-3.5" /> 미션 {completedMissions.size}개 완료</span>}<div className="grid size-9 place-items-center rounded-full bg-[#e9f5f3] text-sm font-bold text-[#0d615e]">김</div></div>
         </header>
-        {screen === "dashboard" ? <Dashboard onStart={startMission} completed={completed} /> : <Mission onBack={() => setScreen("dashboard")} onComplete={() => { setCompleted(true); setScreen("dashboard"); window.scrollTo({ top: 0, behavior: "smooth" }); }} />}
+        {screen === "dashboard" && <Dashboard onStartMission1={() => startMission(1)} onStartMission2={() => startMission(2)} completedMissions={completedMissions} />}
+        {screen === "mission1" && <Mission onBack={() => setScreen("dashboard")} onComplete={() => completeMission(1)} />}
+        {screen === "mission2" && <MissionTwo onBack={() => setScreen("dashboard")} onComplete={() => completeMission(2)} />}
       </div>
     </main>
   );
