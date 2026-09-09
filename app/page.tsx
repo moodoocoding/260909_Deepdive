@@ -24,6 +24,7 @@ import {
   LampDesk,
   Lightbulb,
   ListChecks,
+  type LucideIcon,
   Menu,
   MousePointer2,
   Navigation,
@@ -52,7 +53,7 @@ type MissionItem = {
   name: string;
   answer: Category;
   reason: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   tone: string;
 };
 
