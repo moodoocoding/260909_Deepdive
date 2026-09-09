@@ -85,10 +85,24 @@ function Brand() {
   );
 }
 
-function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+type SidebarItem = "dashboard" | "missions";
+
+function Sidebar({
+  open,
+  activeItem,
+  onClose,
+  onNavigateDashboard,
+  onNavigateMissions,
+}: {
+  open: boolean;
+  activeItem: SidebarItem;
+  onClose: () => void;
+  onNavigateDashboard: () => void;
+  onNavigateMissions: () => void;
+}) {
   const nav = [
-    { label: "대시보드", icon: Home, active: true },
-    { label: "나의 미션", icon: ListChecks, active: false },
+    { id: "dashboard" as const, label: "대시보드", icon: Home, onClick: onNavigateDashboard },
+    { id: "missions" as const, label: "나의 미션", icon: ListChecks, onClick: onNavigateMissions },
   ];
 
   return (
@@ -100,8 +114,8 @@ function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={onClose} aria-label="메뉴 닫기"><X /></Button>
         </div>
         <nav className="mt-10 space-y-2" aria-label="주요 메뉴">
-          {nav.map(({ label, icon: Icon, active }) => (
-            <button key={label} className={cn("flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[0.95rem] font-semibold transition-colors", active ? "bg-[#e9f5f3] text-[#0d615e]" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")}>
+          {nav.map(({ id, label, icon: Icon, onClick }) => (
+            <button key={id} onClick={onClick} aria-current={activeItem === id ? "page" : undefined} className={cn("flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[0.95rem] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-600/15", activeItem === id ? "bg-[#e9f5f3] text-[#0d615e]" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800")}>
               <Icon className="size-[18px]" aria-hidden="true" />{label}
             </button>
           ))}
@@ -135,7 +149,7 @@ function Dashboard({
   const mission2Completed = completedMissions.has(2);
   const overallProgress = (completedCount / 2) * 100;
   return (
-    <div className="mx-auto w-full max-w-[1180px] px-5 pb-12 pt-8 sm:px-8 lg:px-10 lg:pt-12">
+    <div id="dashboard-top" tabIndex={-1} className="mx-auto w-full max-w-[1180px] scroll-mt-24 px-5 pb-12 pt-8 outline-none sm:px-8 lg:px-10 lg:pt-12">
       <section className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
         <div>
           <p className="mb-2 text-sm font-bold text-[#0d7771]">DIGITAL LITERACY LAB</p>
@@ -176,7 +190,7 @@ function Dashboard({
         </article>
       </section>
 
-      <section className="mt-11">
+      <section id="mission-list" tabIndex={-1} className="mt-11 scroll-mt-24 outline-none">
         <div className="mb-5 flex items-end justify-between">
           <div><h2 className="font-display text-2xl font-bold tracking-tight text-slate-950">미션 목록</h2><p className="mt-1 text-sm text-slate-500">하나씩 경험하며 수업 아이디어를 모아 보세요.</p></div>
           <span className="hidden text-sm font-semibold text-slate-400 sm:block">2개의 미션</span>
@@ -446,20 +460,39 @@ function Mission({ onBack, onComplete }: { onBack: () => void; onComplete: () =>
 export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [screen, setScreen] = useState<"dashboard" | "mission1" | "mission2">("dashboard");
+  const [dashboardSection, setDashboardSection] = useState<SidebarItem>("dashboard");
   const [completedMissions, setCompletedMissions] = useState<Set<number>>(() => new Set());
+  const navigateToDashboard = (section: SidebarItem) => {
+    setScreen("dashboard");
+    setDashboardSection(section);
+    setSidebarOpen(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const target = document.getElementById(section === "missions" ? "mission-list" : "dashboard-top");
+        target?.focus({ preventScroll: true });
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  };
   const startMission = (mission: 1 | 2) => {
+    setDashboardSection("missions");
     setScreen(mission === 1 ? "mission1" : "mission2");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const completeMission = (mission: 1 | 2) => {
     setCompletedMissions((current) => new Set(current).add(mission));
-    setScreen("dashboard");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigateToDashboard("dashboard");
   };
 
   return (
     <main className="min-h-screen bg-[#f6f8f9] text-slate-900">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        activeItem={screen === "dashboard" ? dashboardSection : "missions"}
+        onClose={() => setSidebarOpen(false)}
+        onNavigateDashboard={() => navigateToDashboard("dashboard")}
+        onNavigateMissions={() => navigateToDashboard("missions")}
+      />
       <div className="min-h-screen lg:pl-[268px]">
         <header className="sticky top-0 z-30 flex h-[73px] items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur-md sm:px-8 lg:px-10">
           <div className="flex items-center gap-3 lg:hidden"><Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} aria-label="메뉴 열기"><Menu /></Button><Brand /></div>
@@ -470,8 +503,8 @@ export default function HomePage() {
           <div className="ml-auto flex items-center gap-3">{completedMissions.size > 0 && <span className="hidden items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 sm:flex"><CheckCircle2 className="size-3.5" /> 미션 {completedMissions.size}개 완료</span>}<div className="grid size-9 place-items-center rounded-full bg-[#e9f5f3] text-sm font-bold text-[#0d615e]">김</div></div>
         </header>
         {screen === "dashboard" && <Dashboard onStartMission1={() => startMission(1)} onStartMission2={() => startMission(2)} completedMissions={completedMissions} />}
-        {screen === "mission1" && <Mission onBack={() => setScreen("dashboard")} onComplete={() => completeMission(1)} />}
-        {screen === "mission2" && <MissionTwo onBack={() => setScreen("dashboard")} onComplete={() => completeMission(2)} />}
+        {screen === "mission1" && <Mission onBack={() => navigateToDashboard("missions")} onComplete={() => completeMission(1)} />}
+        {screen === "mission2" && <MissionTwo onBack={() => navigateToDashboard("missions")} onComplete={() => completeMission(2)} />}
       </div>
     </main>
   );
